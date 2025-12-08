@@ -1,0 +1,102 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{array}
+
+% Configuración de márgenes
+\geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=15mm,
+ top=15mm,
+}
+
+\begin{document}
+
+\section*{Capítulo 2: Instrucciones MIPS}
+
+% TABLA 1: OPERANDOS
+\begin{table}[h!]
+    \centering
+    \caption{Operandos MIPS}
+    \renewcommand{\arraystretch}{1.4}
+    \begin{tabular}{|p{2.5cm}|p{4cm}|p{8.5cm}|}
+        \hline
+        \textbf{Nombre} & \textbf{Ejemplo} & \textbf{Comentarios} \\
+        \hline
+        32 registros & 
+        \$s0-\$s7, \$t0-\$t9, \$zero, \$a0-\$a3, \$v0-\$v1, \$gp, \$fp, \$sp, \$ra, \$at & 
+        Localizaciones rápidas para datos. En MIPS, los datos deben estar en registros para operar. \$zero es siempre 0. \$at está reservado para el ensamblador. \\
+        \hline
+        $2^{30}$ palabras de memoria & 
+        Memory[0], Memory[4], Memory[4294967292] & 
+        Solo accesibles por transferencia de datos. MIPS usa direcciones de byte (palabras difieren en 4). La memoria guarda estructuras y tablas. \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\vspace{0.5cm}
+
+% TABLA 2: LENGUAJE ENSAMBLADOR
+% Nota: Usamos longtable para que la tabla pueda dividirse en varias páginas si es necesario
+\begin{longtable}{|p{2cm}|p{3cm}|p{3.5cm}|p{3cm}|p{3.5cm}|}
+    \caption{Lenguaje ensamblador MIPS} \\
+    \hline
+    \textbf{Categ.} & \textbf{Instr.} & \textbf{Ejemplo} & \textbf{Significado} & \textbf{Comentarios} \\
+    \hline
+    \endfirsthead
+    
+    \hline
+    \textbf{Categ.} & \textbf{Instr.} & \textbf{Ejemplo} & \textbf{Significado} & \textbf{Comentarios} \\
+    \hline
+    \endhead
+
+    \multirow{3}{*}{Aritmética} 
+    & add & add \$s1, \$s2, \$s3 & \$s1 = \$s2 + \$s3 & 3 operandos; reg. \\
+    & sub & sub \$s1, \$s2, \$s3 & \$s1 = \$s2 - \$s3 & 3 operandos; reg. \\
+    & add imm. & addi \$s1, \$s2, 100 & \$s1 = \$s2 + 100 & Sumar constantes \\
+    \hline
+
+    \multirow{7}{2cm}{Transf. de dato} 
+    & load word & lw \$s1, 100(\$s2) & \$s1 = Mem[\$s2+100] & Memoria a registro \\
+    & store word & sw \$s1, 100(\$s2) & Mem[\$s2+100] = \$s1 & Registro a memoria \\
+    & load half & lh \$s1, 100(\$s2) & \$s1 = Mem[\$s2+100] & Media palabra a reg. \\
+    & store half & sh \$s1, 100(\$s2) & Mem[\$s2+100] = \$s1 & Media palabra a mem. \\
+    & load byte & lb \$s1, 100(\$s2) & \$s1 = Mem[\$s2+100] & Byte a registro \\
+    & store byte & sb \$s1, 100(\$s2) & Mem[\$s2+100] = \$s1 & Byte a memoria \\
+    & load upper & lui \$s1, 100 & \$s1 = 100 * $2^{16}$ & Carga 16 bits sup. \\
+    \hline
+
+    \multirow{7}{*}{Lógica} 
+    & and & and \$s1, \$s2, \$s3 & \$s1 = \$s2 \& \$s3 & AND bit-a-bit \\
+    & or & or \$s1, \$s2, \$s3 & \$s1 = \$s2 | \$s3 & OR bit-a-bit \\
+    & nor & nor \$s1, \$s2, \$s3 & \$s1 = \textasciitilde(\$s2 | \$s3) & NOR bit-a-bit \\
+    & and imm. & andi \$s1, \$s2, 100 & \$s1 = \$s2 \& 100 & AND con constante \\
+    & or imm. & ori \$s1, \$s2, 100 & \$s1 = \$s2 | 100 & OR con constante \\
+    & shift left & sll \$s1, \$s2, 10 & \$s1 = \$s2 $<<$ 10 & Despl. izq. \\
+    & shift right & srl \$s1, \$s2, 10 & \$s1 = \$s2 $>>$ 10 & Despl. der. \\
+    \hline
+
+    \multirow{4}{2cm}{Salto condic.} 
+    & beq & beq \$s1, \$s2, L & if(\$s1==\$s2) goto L & Igualdad \\
+    & bne & bne \$s1, \$s2, L & if(\$s1!=\$s2) goto L & Desigualdad \\
+    & slt & slt \$s1, \$s2, \$s3 & if(\$s2$<$\$s3) \$s1=1 & Menor que \\
+    & slti & slti \$s1, \$s2, 100 & if(\$s2$<$100) \$s1=1 & Menor que ctte. \\
+    \hline
+
+    \multirow{3}{2cm}{Salto incond.} 
+    & jump & j 2500 & goto 10000 & Salto a dirección \\
+    & jr & jr \$ra & goto \$ra & Retorno \\
+    & jal & jal 2500 & \$ra=PC+4; goto... & Llamada proced. \\
+    \hline
+
+\end{longtable}
+
+\noindent \textbf{FIGURA 2.1} Resumen del lenguaje ensamblador MIPS.
+
+\end{document}
