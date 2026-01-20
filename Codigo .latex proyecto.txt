@@ -1,0 +1,163 @@
+\documentclass[12pt]{article}
+
+% --- Paquetes para diseño idéntico ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% Configuración de márgenes
+\geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+% Estilo de títulos
+\titleformat{\section}{\normalfont\Large\bfseries}{}{0pt}{}
+\renewcommand{\labelitemi}{---}
+
+\begin{document}
+
+% --- PÁGINA 1 ---
+\noindent \textbf{\Large Estación de Trabajo para Ingeniería y Desarrollo de Modelos de Fórmula 1 - Análisis Técnico y Justificación de Componentes.}
+
+\vspace{0.5cm}
+\noindent \textbf{Objetivo del proyecto:} Construir una estación de trabajo especializada dentro de un presupuesto de \$3000 para tareas de diseño, simulación y mejora de modelos de F1.
+
+Tomando en cuenta que la carga de trabajo que se realizada es basado con herramientas y software como, Modelado 3D paramétrico (CAD), Análisis por Elementos Finitos (FEA), Dinámica de Fluidos Computacional (CFD), renderizado fotorrealista.
+
+\section*{Componentes Principales:}
+
+\noindent \textbf{➤ Procesador (CPU): AMD Ryzen 9 7950X} 
+\begin{itemize}[noitemsep]
+    \item 16 núcleos / 32 Hilos. Esencial para simulaciones CFD y renderizados. 
+    \item Supera en tareas multi-hilo a sus competidores Intel en esta gama de precio. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{CPU.png} % Imagen de la caja Ryzen 9 
+\end{figure}
+
+\noindent \textbf{➤ Placa Base: B650E ATX} 
+\begin{itemize}[noitemsep]
+    \item GIGABYTE B650E AORUS Elite X AX ICE AM5. 
+    \item DDR5, PCIe 5.0, WiFi 6E, LAN de 2.5GbE. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{Placa base.png} % Captura de la placa base 
+\end{figure}
+
+\newpage
+
+% --- PÁGINA 2 ---
+\noindent \textbf{➤ Tarjeta Gráfica (GPU): NVIDIA RTX 4060 Ti 16Gb} 
+\begin{itemize}[noitemsep]
+    \item Los 16GB de VRAM son cruciales para ensamblajes grandes. 
+    \item Driver NVIDIA Studio para mayor estabilidad. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{GPU.png} % Imagen de la GPU Inno3D 
+\end{figure}
+
+\noindent \textbf{➤ Memoria RAM: 32GB (2x16GB) DDR5 6000MHz CL36} 
+\begin{itemize}[noitemsep]
+    \item CORSAIR VENGEANCE RGB DDR5. 
+    \item Punto de partida para manejar miles de piezas y simulaciones de fluidos.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{RAM.png} % Imagen de la RAM 
+\end{figure}
+
+\section*{Almacenamiento:} 
+
+\noindent \textbf{SSD NVMe M.2 1TB (PCIe 4.0) - Sistema y Apps} 
+\begin{itemize}[noitemsep]
+    \item Kingston NV3 1TB M.2 2280 NVMe SSD. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{NV3 1TB.png} % Reemplaza con tu captura del SSD Kingston
+\end{figure}
+
+\newpage
+
+% --- PÁGINA 3 ---
+\noindent \textbf{SSD NVMe M.2 2TB (PCIe 4.0) - Proyectos activos y cache} 
+\begin{itemize}[noitemsep]
+    \item WD\_Black SN7100 SSD NVMe de 2 TB. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{NV3 2TB.png} % Captura de Amazon SSD 
+\end{figure}
+
+\noindent \textbf{HDD 4TB 7200RPM - Almacenamiento en frío, backups} 
+\begin{itemize}[noitemsep]
+    \item Velocidad para cargar proyectos pesados de simulaciones. 
+    \item Western Digital Black 4 TB. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{HDD 4TB.png} % Imagen del disco duro 
+\end{figure}
+
+\newpage
+
+% --- PÁGINA 4 ---
+\noindent \textbf{➤ Fuente de Poder: 850W 80+ Gold Modular} 
+\begin{itemize}[noitemsep]
+    \item MSI MAG A850GL PCIE5. Eficiente y con margen para actualizaciones. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{FUENTE DE PODER.png} % Captura de Amazon PSU 
+\end{figure}
+
+\noindent \textbf{Disipador de CPU: Enfriado líquido} 
+\begin{itemize}[noitemsep]
+    \item Thermaltake Enfriador líquido AW420. 
+    \item Mantiene frecuencias altas bajo carga sostenida de simulaciones. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{REFRIGERACION LIQUIDA.png} % Reemplaza con tu captura del Thermaltake
+\end{figure}
+
+\newpage
+
+% --- PÁGINA 5 ---
+\noindent \textbf{➤ Gabinete: ATX con buen flujo de aire} 
+\begin{itemize}[noitemsep]
+    \item NZXT H5 Flow 2024. 
+    \item Soporte para radiador de 360 mm y 2 ventiladores incluidos. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{CASE.png} % Imagen del gabinete blanco 
+\end{figure}
+
+\noindent \textbf{Pasta térmica: Thermal Grizzly Kryonaut} 
+\begin{itemize}[noitemsep]
+    \item Conductividad térmica extrema para overclocking y sistemas industriales. 
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{PASTA TERMICA.png} % Imagen de la pasta térmica 
+\end{figure}
+
+\end{document}
