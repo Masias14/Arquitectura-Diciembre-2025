@@ -1,0 +1,144 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{microtype} % Mejora la justificación y evita desbordamientos
+\usepackage{ragged2e} % Para mejores opciones de alineación
+\geometry{letterpaper, margin=1in}
+
+\title{Informe Práctica de Laboratorio 3}
+\author{José Ángel Masías \\ Edael Duque}
+\date{Naguanagua, 10 de marzo de 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+\textbf{República Bolivariana De Venezuela} \\
+Ministerio Del Poder Popular Para la Educación \\
+Universidad De Carabobo \\
+Facultad Experimental De Ciencias Y Tecnología \\
+Departamento De Computación \\
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+\textbf{Profesor:} \\
+José Canache \\
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+\textbf{Estudiantes:} \\
+José Ángel Masías (C.I. 30.281.906) \\
+Edael Duque (C.I. 30.800.814) \\
+\end{center}
+
+\vspace{1cm}
+
+\begin{center}
+Naguanagua, 10 de marzo de 2026
+\end{center}
+
+\newpage
+
+\section*{INFORME}
+
+\subsection*{1. EXPLIQUE CÓMO SE ORGANIZA LA MEMORIA CUANDO UN SISTEMA UTILIZA MEMORY-MAPPED I/O. ¿EN QUÉ REGIÓN DE MEMORIA SE SUELEN MAPEAR LOS DISPOSITIVOS? ¿QUÉ IMPLICACIONES TIENE PARA LAS INSTRUCCIONES LW Y SW?}
+
+En un sistema que utiliza memory-mapped I/O, los registros de los dispositivos periféricos (como datos, control y estado) se asignan a direcciones específicas dentro del mismo espacio de direcciones que la memoria \underline{RAM}. En una arquitectura como MIPS, estos registros de dispositivos suelen mapearse en las direcciones más altas del espacio de direcciones, reservadas para el sistema y los periféricos; por ejemplo, en el simulador MARS para MIPS, las direcciones para dispositivos como el teclado y la pantalla comienzan en \texttt{0xffff0000}. Esta región está deliberadamente alejada del espacio asignado a la RAM para el usuario y el programa, y está exclusivamente reservada para comunicación con dispositivos. Cualquier acceso de lectura/escritura a estas direcciones no toca la RAM, sino que interactúa con los registros de los periféricos simulados. La implicación directa para el repertorio de instrucciones es fundamental: las instrucciones de acceso a memoria, como load word (\textit{lw}) y store word (\textit{sw}), se utilizan indistintamente para leer o escribir en una celda de RAM o en el registro de un dispositivo. Desde la perspectiva del programador y del compilador, no hay diferencia sintáctica ni semántica; es el hardware el que interpreta la dirección y direcciona el acceso al componente correspondiente.
+
+\subsection*{2. ¿CUÁL ES LA PRINCIPAL DIFERENCIA ENTRE MEMORY-MAPPED I/O Y LA ENTRADA/SALIDA POR PUERTOS? ¿QUÉ VENTAJAS Y DESVENTAJAS TIENE CADA ENFOQUE? ¿POR QUÉ MIPS32 UTILIZA PRINCIPALMENTE MEMORY-MAPPED I/O?}
+
+La principal diferencia subyace en el espacio de direcciones utilizado y las instrucciones necesarias para la comunicación:
+\begin{itemize}
+    \item \textbf{MMIO (Memory-Mapped I/O):} Los dispositivos de E/S residen en el mismo espacio de direcciones que la memoria principal. Se utiliza el mismo bus y las mismas instrucciones del procesador, como \textit{lw} y \textit{sw} en MIPS, para acceder tanto a memoria como a periféricos.
+    \item \textbf{PMIO (Port-Mapped I/O):} Los dispositivos tienen su propio espacio de direcciones, independiente y aislado de la memoria. Para acceder a ellos, se requiere un conjunto de instrucciones especiales y exclusivas, como \texttt{IN} y \texttt{OUT} en la arquitectura x86.
+\end{itemize}
+
+\textbf{Ventajas de MMIO:} Simplifica el diseño del procesador al unificar el mecanismo de acceso. Facilita la programación y el soporte del compilador, y ofrece gran flexibilidad para sistemas embebidos. 
+\textbf{Desventajas de MMIO:} Consume parte del espacio de direcciones de memoria, reduciendo la capacidad máxima teórica para RAM, aunque en sistemas de 32 o 64 bits esto es un problema menor.
+
+\textbf{Ventajas de PMIO:} No consume espacio de direcciones de memoria, manteniendo todo el rango disponible para la RAM. Puede permitir buses y señales de control separados.
+\textbf{Desventajas de PMIO:} Requiere un conjunto de instrucciones específico, lo que complica el diseño del procesador y limita la portabilidad del código, que debe usar instrucciones distintas para memoria y para E/S.
+
+MIPS32 utiliza principalmente MMIO porque su visión de diseño y filosofía RISC apuesta por un conjunto de instrucciones simple, reducido y bastante optimizado. Añadir instrucciones especiales para E/S complicaría el hardware y violaría este principio. Al usar MMIO, MIPS aprovecha su potente y eficiente implementación de \textit{lw} y \textit{sw} para todo tipo de comunicaciones con el exterior, manteniendo la elegancia y simplicidad del conjunto de instrucciones.
+
+\subsection*{3. EN UN SISTEMA CON MEMORY-MAPPED I/O: ¿QUÉ PROBLEMAS PUEDEN SURGIR SI DOS DISPOSITIVOS USAN DIRECCIONES SOLAPADAS? ¿CÓMO SE EVITA ESTE CONFLICTO?}
+
+Si dos dispositivos diferentes intentan usar la misma dirección o un rango de direcciones solapado, se produce un conflicto de direcciones. El bus de direcciones no puede seleccionar dos periféricos distintos simultáneamente con la misma combinación de bits. El resultado sería impredecible: podrían activarse ambos dispositivos a la vez, corrompiendo los datos en el bus, o podría producirse un cortocircuito lógico, además de que el procesador leería o escribiría en el dispositivo equivocado.
+
+Este conflicto se puede evitar en la etapa de diseño del sistema, durante la asignación de mapeado de memoria. El diseñador del hardware debe garantizar que a cada dispositivo se le asigne un rango de direcciones exclusivo y que estos rangos no se solapen. Esta asignación se realiza mediante la lógica de decodificación de direcciones, que activa la señal de un selector de circuitos de un único dispositivo para un rango de direcciones dado.
+
+\subsection*{4. ¿POR QUÉ SE CONSIDERA QUE EL MEMORY-MAPPED I/O SIMPLIFICA EL DISEÑO DEL CONJUNTO DE INSTRUCCIONES DE UN PROCESADOR? ¿QUÉ TIPO DE INSTRUCCIONES ADICIONALES SERÍAN NECESARIAS SI SE USARA E/S POR PUERTOS?}
+
+El MMIO simplifica el diseño del conjunto de instrucciones porque elimina la necesidad de instrucciones especializadas para la entrada/salida. El hardware del procesador no necesita lógica adicional para manejar modos de direccionamiento o códigos de operación exclusivos para periféricos. Toda la comunicación se reduce a operaciones de carga y almacenamiento en memoria, que ya son esenciales para el funcionamiento básico de cualquier computador.
+
+El conjunto de instrucciones se complicaría un poco para PMIO, ya que se requiere agregar instrucciones adicionales para hacerlo funcionar; algunos ejemplos como:
+\begin{itemize}
+    \item \texttt{IN}: para leer de un puerto.
+    \item \texttt{OUT}: para escribir a un puerto.
+\end{itemize}
+Cabe resaltar que estas instrucciones suelen tener una semántica restrictiva, como para transferir datos exclusivamente desde o hacia el acumulador, lo que agrega complejidad al programador y al compilador.
+
+\subsection*{5. ¿QUÉ OCURRE A NIVEL DEL BUS DE DATOS Y DIRECCIONES CUANDO EL PROCESADOR ACCEDE A UNA DIRECCIÓN DE MEMORIA QUE CORRESPONDE A UN DISPOSITIVO? ¿CÓMO SABE EL HARDWARE QUE DEBE ACCEDER A UN PERIFÉRICO EN LUGAR DE LA RAM?}
+
+Cuando el procesador ejecuta una instrucción \textit{sw} y coloca una dirección en el bus de direcciones, el hardware de decodificación de direcciones (que puede estar integrado en el controlador de memoria) es el responsable de interpretar esa dirección. Este decodificador examina los bits de la dirección. Si la dirección cae dentro del rango asignado a la RAM, activa las señales de control correspondientes para la memoria. Si la dirección pertenece al rango de un periférico, activa las señales de control para el bus de E/S correspondiente. El procesador no necesita conocer qué hay al otro lado; simplemente inicia la transacción y el hardware se encarga de encaminarla al destino correcto. El bus de datos transporta la información hacia o desde el elemento seleccionado.
+
+\subsection*{6. ¿ES POSIBLE QUE UN PROGRAMA NORMAL (SIN PRIVILEGIOS) ACCEDA A UN DISPOSITIVO MAPEADO EN MEMORIA? ¿QUÉ MECANISMOS DE PROTECCIÓN EXISTEN PARA EVITAR ACCESOS NO AUTORIZADOS?}
+
+Sí, es posible que un programa normal en modo usuario y sin privilegios pueda acceder a un dispositivo mapeado en memoria si el sistema operativo no lo impide, ya que las instrucciones \textit{lw} y \textit{sw} son las mismas que usa cualquier programa. Esto supondría un gran problema de seguridad y estabilidad, ya que un proceso podría monopolizar un dispositivo, leer datos de otros procesos o incluso bloquear el sistema.
+
+Para evitarlo, se utilizan mecanismos de protección basados en el hardware y gestionados por el sistema operativo; por ejemplo:
+\begin{itemize}
+    \item \textbf{MMU (Unidad de Manejo de Memoria):} Es el mecanismo principal. El sistema operativo configura la MMU para que las direcciones virtuales de un proceso de usuario no estén mapeadas a las direcciones físicas donde residen los dispositivos de E/S. Cuando un proceso intenta acceder a esa dirección, la MMU genera una excepción y el control pasa al sistema operativo, que puede terminar el proceso.
+    \item \textbf{Protección basada en páginas:} Las tablas de páginas incluyen bits que indican si una página es accesible en modo usuario o solo en modo kernel.
+\end{itemize}
+
+\subsection*{7. ¿QUÉ TÉCNICAS SE PUEDEN EMPLEAR PARA EVITAR ESPERAS ACTIVAS INNECESARIAS AL INTERACTUAR CON DISPOSITIVOS?}
+
+La espera activa consiste en que el procesador verifica constantemente el bit de estado de un dispositivo en un bucle, desperdiciando ciclos de reloj que podrían usarse para otras tareas. Se pueden mitigar de varias maneras:
+\begin{itemize}
+    \item \textbf{Interrupciones:} Es el método más común. El dispositivo notifica al procesador que está listo o que tiene datos mediante una señal de interrupción. El procesador puede entonces suspender temporalmente el programa en ejecución, atender al dispositivo y luego reanudar el programa. Esto libera al procesador de tener que preguntar constantemente.
+    \item \textbf{DMA (Acceso Directo a Memoria):} Para transferencias de grandes bloques de datos, un controlador DMA se encarga de mover los datos directamente entre el dispositivo y la memoria, sin intervención del procesador. El procesador solo se involucra al inicio, para configurar la transferencia, y al final, cuando el controlador DMA lanza una interrupción para indicar que la tarea ha concluido.
+\end{itemize}
+
+\subsection*{8. ANÁLISIS Y DISCUSIÓN DE RESULTADOS.}
+
+\subsubsection*{Ejercicio 1: Sensor de Luz}
+
+El ejercicio 1 se basa en la integración del sensor dentro del espacio de direccionamiento global. En MIPS32, esto significa que el procesador no requiere instrucciones específicas de entrada/salida (como \texttt{IN} o \texttt{OUT} en x86). 
+
+\textbf{Transparencia para el programador:} La interacción se reduce a instrucciones de carga (\textit{lw}) y almacenamiento (\textit{sw}), lo cual simplifica el diseño del compilador, pero requiere un manejo cuidadoso de la volatilidad de los datos.
+
+\textbf{Sincronización mediante espera activa:} El control de flujo en el procedimiento \texttt{InicializarSensorLuz} utiliza un bucle cerrado de consulta. En cuanto al coste computacional, la CPU ejecuta una ráfaga constante de instrucciones (\textit{lw, li, bne}). Si el sensor tarda 10 ms en estar listo y la CPU corre a 1 GHz, se desperdician aproximadamente 10 millones de ciclos de reloj que podrían haberse usado en otros cálculos.
+
+\textbf{Latencia de detección:} El beneficio de la espera activa es que la latencia entre el momento en que el hardware pone el bit de ``Listo'' y el momento en que el software lo detecta es casi nula, limitada solo por el tiempo de ejecución de una iteración del bucle.
+
+\textbf{Programación defensiva:} En \texttt{LeerLuminosidad}, no se asume que el dato es válido solo porque se llamó a la función; se vuelve a verificar el registro de estado. Esto protege al sistema contra errores transitorios del hardware que podrían ocurrir entre la inicialización y la lectura.
+
+\textbf{Conclusión del ejercicio 1:} El ejercicio demuestra exitosamente la implementación de un controlador de dispositivo básico. Aunque es ineficiente en términos de ciclos de CPU, es una característica deseable en sistemas embebidos de control crítico donde la simplicidad y la velocidad de respuesta son más importantes que el ahorro de energía o el procesamiento paralelo.
+
+\subsubsection*{Ejercicio 2: Sensor de Presión con Reintentos}
+
+El segundo ejercicio tiene como propósito enseñar la gestión de errores de hardware desde el software. Mientras que el primer ejercicio era una comunicación lineal (pedir y recibir), este ejercicio introduce la tolerancia a fallos. En el mundo real, los sensores físicos pueden fallar momentáneamente debido a interferencias eléctricas, vibraciones o caídas de tensión. 
+
+El ejercicio enseña que un programa de bajo nivel no debe parar al primer error. Al implementar un reintento, el sistema se vuelve más robusto y evita que una falla de un milisegundo detenga toda una maquinaria o proceso industrial. Este ejercicio sirve para demostrar cómo el software de bajo nivel puede auto-corregirse ante fallos del hardware, utilizando una estructura de control jerárquica que gestiona la pila y garantiza la integridad de los datos mediante reintentos.
+
+\subsubsection*{Ejercicio 3: Dispositivo Médico (Tensión Arterial)}
+
+Para el tercer ejercicio, nos centramos en la gestión de múltiples salidas y la sincronización con dispositivos médicos, que suelen tener tiempos de respuesta más largos.
+
+\textbf{Gestión de salidas múltiples (Sístole y Diástole):} A diferencia de los sensores de luz o presión, este dispositivo genera dos datos distintos a partir de una única acción de control. El procedimiento utiliza los registros \$v0 y \$v1 para devolver ambos valores simultáneamente. En MIPS, esta es la forma estándar de manejar funciones que devuelven resultados compuestos (como estructuras pequeñas o pares de datos). Esto evita tener que realizar dos llamadas al controlador por separado, garantizando que ambos valores correspondan a la misma toma o medición física, manteniendo la coherencia de los datos.
+
+\textbf{Sincronización para un software lento:} La medición de tensión arterial es un proceso mecánico (inflado y desinflado) que puede tardar varios segundos. El bucle de espera activa sobre \texttt{TensionEstado} bloquea el procesador hasta que el hardware confirma la validez de los datos. En un entorno médico, este bloqueo asegura que el software no intente procesar valores parciales o inestables.
+
+\textbf{Escalabilidad:} Cada dato tiene su propia dirección de 32 bits, lo que permite al programador acceder a ellos de forma independiente mediante instrucciones \textit{lw}. Esta disposición facilita la escalabilidad. Si en el futuro se añadiera un registro para la frecuencia cardíaca, solo habría que asignar una nueva dirección, por ejemplo \texttt{0x10010310}, sin alterar la lógica de los registros existentes.
+
+\end{document}
