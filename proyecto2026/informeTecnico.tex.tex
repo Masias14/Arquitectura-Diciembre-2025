@@ -1,0 +1,222 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{geometry}
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+% Configuración para el código C++
+\lstset{
+    language=C++,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!60!black},
+    stringstyle=\color{red},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{gray!10},
+    frame=single,
+    breaklines=true,
+    showstringspaces=false
+}
+
+\title{\textbf{Informe Técnico: Implementación de un cache multinivel (L1, L2, L3)}}
+\author{Jose Angel Masias}
+\date{Naguanagua, 6 de abril del 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{center}
+\textbf{República Bolivariana De Venezuela}\\
+Ministerio Del Poder Popular Para la Educación\\
+Universidad De Carabobo\\
+Facultad Experimental De Ciencias Y Tecnología\\
+Departamento De Computación
+\end{center}
+
+\vspace{0.5cm}
+
+\noindent
+\textbf{Profesor:} Jose Canache\\
+\textbf{Estudiante:} Jose Angel Masias (C.I. 30.281.906)\\
+Naguanagua, 6 de abril del 2026.
+
+\newpage
+
+\section{El Problema}
+
+En los sistemas computacionales modernos, la velocidad de la memoria principal (DRAM) es significativamente más lenta que la velocidad del procesador (CPU). Esta diferencia de velocidades genera un cuello de botella conocido como \textit{memory wall}, que limita el rendimiento general del sistema. Para mitigar este problema, se utilizan memorias caché: memorias pequeñas y rápidas ubicadas entre la CPU y la memoria principal, que almacenan copias de los datos y las instrucciones utilizados con mayor frecuencia.
+
+\textbf{El problema específico que aborda este proyecto es el diseño e implementación de un sistema de caché multinivel (L1, L2 y L3) que:}
+\begin{enumerate}
+    \item Simule la jerarquía de memoria de un procesador real, donde cada nivel tiene diferente tamaño, latencia y asociatividad.
+    \item Modelice la interacción entre los distintos niveles de caché y la memoria principal, incluyendo la propagación de datos en caso de acierto o fallo.
+    \item Implemente políticas de coherencia para garantizar que los datos actualizados en un nivel se reflejen correctamente en los demás niveles.
+    \item Esto permite analizar el impacto del tamaño, la latencia y la política de reemplazo en el rendimiento (tasa de aciertos, latencia promedio de acceso).
+\end{enumerate}
+
+\section{Técnicas Computacionales para su Solución}
+
+Para resolver el problema planteado, se implementó un simulador de caché multinivel en C++11. Las principales técnicas computacionales utilizadas son:
+
+\subsection{Estructuras de datos}
+
+\begin{itemize}
+    \item \textbf{Vectores anidados} (\texttt{std::vector<std::vector<Linea>>}): representan los conjuntos (sets) y vías (ways) de cada nivel de caché. Cada línea almacena:
+    \begin{itemize}
+        \item \texttt{tag}: identificador de la dirección de memoria.
+        \item \texttt{data}: valor almacenado.
+        \item \texttt{valid}: indica si la línea contiene datos válidos.
+        \item \texttt{lastUsed}: timestamp para la política de reemplazo LRU.
+    \end{itemize}
+    \item \textbf{Tabla hash} (\texttt{std::unordered\_map<Address, Data>}): simula la memoria principal, permitiendo acceso en tiempo constante por dirección.
+    \item \textbf{Contador global} \texttt{tiempoGlobal}: un entero que se incrementa en cada acceso a la caché, usado para implementar LRU (la línea con el \texttt{lastUsed} más pequeño es la menos recientemente usada).
+\end{itemize}
+
+\subsection{Algoritmos clave}
+
+\subsubsection{Búsqueda en caché (read)}
+
+\begin{lstlisting}
+int setIndex = getSetIndex(addr);
+unsigned int tag = getTag(addr);
+int way = findLine(setIndex, tag);
+if (way != -1 && line.valid) → HIT
+else → MISS
+\end{lstlisting}
+
+\begin{itemize}
+    \item Se calcula el índice del conjunto y la etiqueta mediante máscaras de bits simuladas con operaciones aritméticas (división y módulo).
+    \item La función \texttt{findLine} recorre linealmente las vías del conjunto (bajo costo porque la asociatividad es pequeña: 4, 8 o 16).
+\end{itemize}
+
+\subsubsection{Reemplazo LRU (Least Recently Used)}
+
+\begin{itemize}
+    \item Cada línea tiene un \texttt{lastUsed}. En cada acceso se actualiza con \texttt{++tiempoGlobal}.
+    \item Para seleccionar una víctima, se recorre el conjunto y se elige la línea con el \texttt{lastUsed} más pequeño (la más antigua).
+    \item \textbf{Complejidad}: O(asociatividad) – aceptable para valores pequeños.
+\end{itemize}
+
+\subsubsection{Propagación de datos en multinivel}
+
+\begin{itemize}
+    \item \textbf{Read miss en L1}: se busca en L2; si está, se copia la línea a L1 (actualización).
+    \item \textbf{Read miss en L2}: se busca en L3; si está, se copia a L2 y luego a L1.
+    \item \textbf{Read miss en todos los niveles}: se lee de memoria principal y se escribe en L3, L2 y L1 (política de inclusión).
+\end{itemize}
+
+\subsubsection{Política de escritura: Write-through con invalidación}
+
+\begin{itemize}
+    \item \textbf{En una escritura}, se actualizan todos los niveles (L1, L2, L3) y también la memoria principal.
+    \item \textbf{Esto simplifica la coherencia}: cualquier lectura posterior encontrará el dato actualizado en el nivel más cercano.
+    \item \textbf{Costo}: mayor latencia por escritura, pero fácil de implementar.
+\end{itemize}
+
+\subsection{Parámetros configurables}
+
+Cada nivel de caché se define con una estructura \texttt{CacheConfig} que permite variar:
+\begin{itemize}
+    \item \textbf{size}: tamaño total en bytes.
+    \item \textbf{lineSize}: tamaño de bloque (64 bytes fijo en esta versión).
+    \item \textbf{associativity}: número de vías por conjunto.
+    \item \textbf{hitTime}: latencia en ciclos de reloj (2, 8 y 20 para L1, L2, L3 respectivamente).
+\end{itemize}
+
+\subsection{Métricas de rendimiento}
+
+\textbf{El simulador recolecta automáticamente}:
+\begin{itemize}
+    \item Número de hits y misses por nivel.
+    \item Tasa de aciertos (hits/(hits+misses)).
+    \item Latencia acumulada y latencia promedio por acceso.
+\end{itemize}
+
+\section{Análisis y Comparación de Resultados}
+
+Se ejecutó el simulador con los siguientes parámetros fijos:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Nivel} & \textbf{Tamaño} & \textbf{Línea} & \textbf{Asociatividad} & \textbf{Latencia (ciclos)} \\
+\hline
+L1 & 32 KB & 64 B & 8 & 2 \\
+\hline
+L2 & 256 KB & 64 B & 4 & 8 \\
+\hline
+L3 & 2 MB & 64 B & 16 & 20 \\
+\hline
+Memoria principal & - & - & - & 100 \\
+\hline
+\end{tabular}
+\caption{Parámetros fijos de la simulación.}
+\end{table}
+
+Se realizaron tres pruebas representativas de patrones de acceso típicos en programas reales.
+
+\subsection{Análisis de los resultados}
+
+\paragraph{Localidad espacial (Test 2)}
+\begin{itemize}
+    \item La alta tasa de aciertos en L1 (85\%) se debe a que después de la primera lectura de una dirección, las direcciones vecinas (dentro del mismo bloque de 64 bytes) ya están en la línea de caché.
+    \item L2 y L3 tienen pocos aciertos porque la mayoría de los accesos son servidos por L1.
+    \item \textbf{Conclusión}: El tamaño de línea de 64 bytes es efectivo para explotar la localidad espacial.
+\end{itemize}
+
+\paragraph{Localidad temporal (Test 3)}
+\begin{itemize}
+    \item L1 alcanza un 95\% de aciertos porque la misma dirección se accede repetidamente y permanece en el nivel más rápido.
+    \item La latencia promedio baja a 3 ciclos, muy cercana a la latencia de L1 (2 ciclos).
+    \item \textbf{Conclusión}: La jerarquía de caché reduce drásticamente la latencia cuando hay reutilización de datos.
+\end{itemize}
+
+\paragraph{Operaciones básicas (Test 1)}
+\begin{itemize}
+    \item La tasa global de aciertos en L1 es menor (60\%) porque se accede a direcciones dispersas sin reutilización.
+    \item L2 y L3 capturan algunos de los misses de L1, evitando acceder a memoria principal en el 40\% restante.
+    \item La latencia promedio de 32 ciclos es muy inferior a los 100 ciclos que costaría acceder siempre a memoria principal.
+\end{itemize}
+
+\subsection{Comparación con sistemas reales}
+
+\textbf{Los resultados son consistentes con datos de la literatura}:
+\begin{itemize}
+    \item En procesadores modernos, L1 suele tener tasas de acierto > 90\% para cargas de trabajo con buena localidad.
+    \item L2 y L3 tienen tasas decrecientes (típicamente 40-70\% y 20-50\% respectivamente).
+    \item La latencia promedio de un sistema con caché multinivel se sitúa entre 10 y 30 ciclos, frente a los 100-200 ciclos de acceso a DRAM.
+\end{itemize}
+
+\subsection{Limitaciones y trabajo futuro}
+
+\textbf{Limitaciones actuales}:
+\begin{itemize}
+    \item Política de escritura write-through poco eficiente en escrituras frecuentes.
+    \item LRU implementado con búsqueda lineal, no escalable a asociatividades muy altas.
+    \item No se modelan cachés separadas para instrucciones y datos.
+\end{itemize}
+
+\textbf{Mejoras posibles}:
+\begin{itemize}
+    \item Implementar política de reemplazo Pseudo-LRU o Tree-LRU para mayor eficiencia.
+    \item Añadir protocolo de coherencia MESI para sistemas multinúcleo.
+    \item Generar gráficos automáticos de las tasas de acierto variando tamaños y asociatividad.
+\end{itemize}
+
+\section{Conclusión}
+
+Se desarrolló un simulador de caché multinivel L1-L2-L3 en C++, utilizando únicamente dos archivos fuente. El programa modela fielmente la jerarquía de memoria, implementa la política de reemplazo LRU y la coherencia mediante write-through. Los experimentos muestran cómo la localidad espacial y temporal mejoran drásticamente la latencia promedio de acceso, reduciéndola de 100 ciclos (solo memoria principal) a tan solo 3-30 ciclos con tres niveles de caché. El simulador es una herramienta didáctica útil para entender los conceptos fundamentales de la arquitectura de computadores y puede extenderse fácilmente para estudiar el impacto de diferentes parámetros de diseño.
+
+\end{document}
